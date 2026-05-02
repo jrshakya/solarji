@@ -1,5 +1,6 @@
 ﻿import { createContext, useContext, useState, useEffect } from 'react';
 import api from '../api/axios';
+import { hashPassword } from '../api/crypto';
 
 const AuthContext = createContext(null);
 
@@ -20,7 +21,8 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = async (email, password) => {
-    const res = await api.post('/auth/login', { email, password });
+    const hashed = await hashPassword(password);
+    const res = await api.post('/auth/login', { email, password: hashed });
     localStorage.setItem('solarji_token', res.data.token);
     setUser(res.data.user);
     return res.data.user;

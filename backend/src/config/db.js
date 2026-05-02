@@ -1,4 +1,6 @@
 ﻿const mongoose = require('mongoose');
+const dns = require('dns');
+dns.setServers(['8.8.8.8', '8.8.4.4']); // use Google DNS — router doesn't support SRV records
 
 const connectDB = async () => {
   try {

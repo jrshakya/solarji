@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect } from 'react';
 import { Users as UsersIcon, Plus, Edit2, Trash2, X, Eye, EyeOff } from 'lucide-react';
 import api from '../../api/axios';
+import { hashPassword } from '../../api/crypto';
 import Layout from '../../components/Layout';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
@@ -37,7 +38,11 @@ export default function Users() {
     setSaving(true);
     try {
       const payload = { ...form };
-      if (!payload.password) delete payload.password;
+      if (payload.password) {
+        payload.password = await hashPassword(payload.password);
+      } else {
+        delete payload.password;
+      }
       if (editing) {
         await api.put(`/users/${editing._id}`, payload);
         toast.success('User updated');

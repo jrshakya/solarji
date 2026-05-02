@@ -5,6 +5,7 @@ backend/node_modules/
 
 # Build output
 frontend/dist/
+frontend/dist.zip
 
 # Environment files (NEVER commit these)
 .env

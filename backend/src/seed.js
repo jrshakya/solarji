@@ -1,27 +1,29 @@
 ﻿require('dotenv').config();
+const dns = require('dns');
+dns.setServers(['8.8.8.8', '8.8.4.4']);
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const User = require('./models/User');
 const StockItem = require('./models/StockItem');
+
+// Must match the SHA-256 hashing done on the frontend before sending credentials
+const sha256 = (str) => crypto.createHash('sha256').update(str).digest('hex');
 
 async function seed() {
   await mongoose.connect(process.env.MONGO_URI);
   console.log('Connected to MongoDB');
 
-  // Create admin user
-  const existing = await User.findOne({ email: 'admin@solarji.com' });
-  if (!existing) {
-    await User.create({
-      name: 'Admin',
-      email: 'admin@solarji.com',
-      password: 'admin123',
-      role: 'admin',
-      phone: '+91 98765 43210',
-    });
-    console.log('Admin user created: admin@solarji.com / admin123');
-  } else {
-    console.log('Admin user already exists');
-  }
+  // Create admin user — delete existing and recreate to apply new credentials
+  await User.deleteOne({ email: 'admin@solarji.com' });
+  await User.create({
+    name: 'Admin',
+    email: 'admin@solarji.com',
+    password: sha256('Consultants94@'), // stored as bcrypt(sha256(plain)) — plain never persisted
+    role: 'admin',
+    phone: '+91 98765 43210',
+  });
+  console.log('Admin user seeded: admin@solarji.com');
 
   // Create sample stock items
   const items = [

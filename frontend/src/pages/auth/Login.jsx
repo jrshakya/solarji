@@ -120,13 +120,13 @@ export default function Login() {
             {/* email */}
             <div>
               <label style={{ display:'block', fontSize:'.72rem', fontWeight:700, color:'#6b7280', textTransform:'uppercase', letterSpacing:'.08em', marginBottom:7 }}>
-                Email Address
+                Email or Username
               </label>
               <div style={{ position:'relative' }}>
                 <Mail size={15} style={{ position:'absolute', left:13, top:'50%', transform:'translateY(-50%)', color:'#9ca3af' }} />
                 <input
-                  type="email" required autoComplete="email"
-                  placeholder="you@solarji.com"
+                  type="text" required autoComplete="username"
+                  placeholder="admin or you@solarji.com"
                   value={form.email}
                   onChange={e => setForm({ ...form, email:e.target.value })}
                   style={{

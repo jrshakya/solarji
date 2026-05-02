@@ -1,9 +1,11 @@
-﻿import { useState, useEffect } from 'react';
-import { Package, Plus, Edit2, Trash2, X, Search } from 'lucide-react';
+﻿import { useState, useEffect, useRef } from 'react';
+import { Package, Plus, Edit2, Trash2, X, Search, Printer } from 'lucide-react';
 import api from '../../api/axios';
 import Layout from '../../components/Layout';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
+
+const ORANGE = '#f7941d';
 
 export default function StockItems() {
   const [items, setItems] = useState([]);
@@ -13,6 +15,7 @@ export default function StockItems() {
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
   const { isAdmin } = useAuth();
+  const printRef = useRef(null);
 
   const emptyForm = { name: '', description: '', category: 'Solar Panel', unit: 'piece', purchasePrice: '', sellPrice: '', quantity: '', minQuantity: 0 };
   const [form, setForm] = useState(emptyForm);
@@ -45,16 +48,129 @@ export default function StockItems() {
     catch { toast.error('Failed'); }
   };
 
+  const handlePrint = () => {
+    const printContent = printRef.current.innerHTML;
+    const win = window.open('', '_blank', 'width=900,height=700');
+    win.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Stock Report — SolarJi</title>
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: Arial, sans-serif; font-size: 12px; color: #111; padding: 24px; }
+            h2 { font-size: 18px; font-weight: 800; color: #111; margin-bottom: 2px; }
+            .sub { font-size: 11px; color: #666; margin-bottom: 16px; }
+            .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 2px solid ${ORANGE}; padding-bottom: 12px; }
+            .brand { font-size: 22px; font-weight: 900; color: ${ORANGE}; }
+            table { width: 100%; border-collapse: collapse; }
+            thead tr { background: #111; color: #fff; }
+            th { padding: 8px 10px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+            td { padding: 7px 10px; border-bottom: 1px solid #eee; font-size: 11.5px; }
+            tr:nth-child(even) td { background: #fafafa; }
+            .low { color: #d97706; font-weight: 700; }
+            .ok { color: #059669; font-weight: 700; }
+            .cat { background: #f3f4f6; padding: 2px 7px; border-radius: 10px; font-size: 10px; }
+            tfoot td { font-weight: 700; border-top: 2px solid #111; padding-top: 10px; font-size: 12px; }
+            @page { margin: 15mm; }
+          </style>
+        </head>
+        <body>${printContent}</body>
+      </html>
+    `);
+    win.document.close();
+    setTimeout(() => { win.focus(); win.print(); win.close(); }, 300);
+  };
+
   const f = (field, val) => setForm(p => ({ ...p, [field]: val }));
   const filtered = items.filter(i => !search || i.name.toLowerCase().includes(search.toLowerCase()) || i.category.toLowerCase().includes(search.toLowerCase()));
+  const lowStock = items.filter(i => i.minQuantity > 0 && i.quantity <= i.minQuantity);
+
+  const now = new Date().toLocaleString('en-IN', { dateStyle: 'long', timeStyle: 'short' });
 
   return (
     <Layout module="stock">
+      {/* Hidden print template */}
+      <div ref={printRef} style={{ display: 'none' }}>
+        <div className="header">
+          <div>
+            <div className="brand">SolarJi</div>
+            <div style={{ fontSize: 11, color: '#666', marginTop: 2 }}>Stock Inventory Report</div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: 11, color: '#666' }}>Generated: {now}</div>
+            <div style={{ fontSize: 11, color: '#666' }}>Total Items: {items.length}</div>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Item Name</th>
+              <th>Category</th>
+              <th>Unit</th>
+              <th>Purchase Price</th>
+              <th>Sell Price</th>
+              <th>Qty In Stock</th>
+              <th>Min Qty</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item, i) => {
+              const isLow = item.minQuantity > 0 && item.quantity <= item.minQuantity;
+              return (
+                <tr key={item._id}>
+                  <td>{i + 1}</td>
+                  <td><strong>{item.name}</strong>{item.description ? <><br /><span style={{ fontSize: 10, color: '#888' }}>{item.description}</span></> : ''}</td>
+                  <td><span className="cat">{item.category}</span></td>
+                  <td>{item.unit}</td>
+                  <td>₹{item.purchasePrice?.toLocaleString('en-IN')}</td>
+                  <td>₹{item.sellPrice?.toLocaleString('en-IN')}</td>
+                  <td className={isLow ? 'low' : 'ok'}>{item.quantity}</td>
+                  <td>{item.minQuantity}</td>
+                  <td className={isLow ? 'low' : 'ok'}>{isLow ? '⚠ Low Stock' : '✓ OK'}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colSpan={6} style={{ textAlign: 'right' }}>TOTAL ITEMS IN REPORT:</td>
+              <td colSpan={3}>{items.length} items &nbsp;|&nbsp; {lowStock.length} low stock</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Stock Items</h1>
-          {isAdmin && <button onClick={openCreate} className="btn-primary"><Plus className="w-4 h-4" /> Add Item</button>}
+          <div className="flex gap-2">
+            <button
+              onClick={handlePrint}
+              style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 14px', borderRadius:10, border:'1.5px solid #e5e7eb', background:'#fff', color:'#374151', fontWeight:600, fontSize:13, cursor:'pointer' }}
+            >
+              <Printer size={15} /> Print Stock
+            </button>
+            {isAdmin && (
+              <button onClick={openCreate} className="btn-primary">
+                <Plus className="w-4 h-4" /> Add Item
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* Low stock alert */}
+        {lowStock.length > 0 && (
+          <div style={{ background:'#fff7ed', border:'1.5px solid #fed7aa', borderRadius:12, padding:'10px 14px', marginBottom:16, display:'flex', alignItems:'center', gap:8, fontSize:13 }}>
+            <span style={{ fontSize:16 }}>⚠️</span>
+            <span style={{ color:'#92400e', fontWeight:600 }}>
+              {lowStock.length} item{lowStock.length > 1 ? 's' : ''} below minimum stock:&nbsp;
+              {lowStock.map(i => i.name).join(', ')}
+            </span>
+          </div>
+        )}
 
         <div className="card mb-4">
           <div className="relative">
@@ -75,36 +191,40 @@ export default function StockItems() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map(item => (
-                    <tr key={item._id} className="border-b border-gray-50 hover:bg-gray-50">
-                      <td className="py-3 px-3">
-                        <div className="flex items-center gap-2">
-                          <Package className="w-4 h-4 text-solar-400" />
-                          <div>
-                            <p className="font-medium text-gray-800">{item.name}</p>
-                            {item.description && <p className="text-xs text-gray-400">{item.description}</p>}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-3 px-3"><span className="badge bg-gray-100 text-gray-600">{item.category}</span></td>
-                      <td className="py-3 px-3 text-gray-700">₹{item.purchasePrice?.toLocaleString('en-IN')}</td>
-                      <td className="py-3 px-3 text-gray-700 font-medium">₹{item.sellPrice?.toLocaleString('en-IN')}</td>
-                      <td className="py-3 px-3">
-                        <span className={`font-semibold ${item.quantity <= item.minQuantity && item.minQuantity > 0 ? 'text-orange-600' : 'text-gray-700'}`}>
-                          {item.quantity} {item.unit}
-                        </span>
-                      </td>
-                      <td className="py-3 px-3 text-gray-500">{item.minQuantity}</td>
-                      {isAdmin && (
+                  {filtered.map(item => {
+                    const isLow = item.minQuantity > 0 && item.quantity <= item.minQuantity;
+                    return (
+                      <tr key={item._id} className="border-b border-gray-50 hover:bg-gray-50">
                         <td className="py-3 px-3">
-                          <div className="flex gap-2">
-                            <button onClick={() => openEdit(item)} className="btn-secondary p-1.5"><Edit2 className="w-3.5 h-3.5" /></button>
-                            <button onClick={() => handleDelete(item._id, item.name)} className="btn-danger p-1.5"><Trash2 className="w-3.5 h-3.5" /></button>
+                          <div className="flex items-center gap-2">
+                            <Package className="w-4 h-4 text-solar-400" />
+                            <div>
+                              <p className="font-medium text-gray-800">{item.name}</p>
+                              {item.description && <p className="text-xs text-gray-400">{item.description}</p>}
+                            </div>
                           </div>
                         </td>
-                      )}
-                    </tr>
-                  ))}
+                        <td className="py-3 px-3"><span className="badge bg-gray-100 text-gray-600">{item.category}</span></td>
+                        <td className="py-3 px-3 text-gray-700">₹{item.purchasePrice?.toLocaleString('en-IN')}</td>
+                        <td className="py-3 px-3 text-gray-700 font-medium">₹{item.sellPrice?.toLocaleString('en-IN')}</td>
+                        <td className="py-3 px-3">
+                          <span className={`font-semibold ${isLow ? 'text-orange-600' : 'text-gray-700'}`}>
+                            {item.quantity} {item.unit}
+                            {isLow && <span className="ml-1 text-xs">⚠</span>}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 text-gray-500">{item.minQuantity}</td>
+                        {isAdmin && (
+                          <td className="py-3 px-3">
+                            <div className="flex gap-2">
+                              <button onClick={() => openEdit(item)} className="btn-secondary p-1.5"><Edit2 className="w-3.5 h-3.5" /></button>
+                              <button onClick={() => handleDelete(item._id, item.name)} className="btn-danger p-1.5"><Trash2 className="w-3.5 h-3.5" /></button>
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })}
                   {filtered.length === 0 && (
                     <tr><td colSpan={7} className="text-center py-12 text-gray-400">No items found</td></tr>
                   )}

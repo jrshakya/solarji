@@ -1,20 +1,46 @@
 ﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Plus, Eye, ShoppingCart, Package } from 'lucide-react';
+import { FileText, Plus, Eye, ShoppingCart, Package, Trash2, X } from 'lucide-react';
 import api from '../../api/axios';
 import Layout from '../../components/Layout';
+import toast from 'react-hot-toast';
+import { useAuth } from '../../context/AuthContext';
 
 export default function VoucherList() {
   const [vouchers, setVouchers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState('');
   const [selected, setSelected] = useState(null);
+  const [deleting, setDeleting] = useState(null);
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
 
-  useEffect(() => {
+  const load = () => {
     const params = typeFilter ? `?type=${typeFilter}` : '';
-    api.get(`/stock/vouchers${params}`).then(r => setVouchers(r.data)).catch(() => {}).finally(() => setLoading(false));
-  }, [typeFilter]);
+    api.get(`/stock/vouchers${params}`)
+      .then(r => setVouchers(r.data))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { load(); }, [typeFilter]);
+
+  const handleDelete = async (voucher) => {
+    if (!window.confirm(
+      `Delete ${voucher.type === 'ADD' ? 'Purchase' : 'Sales'} Voucher ${voucher.voucherNumber}?\n\nThis will REVERSE the stock quantities. This cannot be undone.`
+    )) return;
+    setDeleting(voucher._id);
+    try {
+      await api.delete(`/stock/vouchers/${voucher._id}`);
+      toast.success('Voucher deleted & stock reversed');
+      setSelected(null);
+      load();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Delete failed');
+    } finally {
+      setDeleting(null);
+    }
+  };
 
   const totals = {
     purchase: vouchers.filter(v => v.type === 'ADD').reduce((s, v) => s + v.totalAmount, 0),
@@ -75,7 +101,7 @@ export default function VoucherList() {
                     <th className="text-right py-3 px-3 font-semibold text-gray-600">Amount</th>
                     <th className="text-left py-3 px-3 font-semibold text-gray-600">By</th>
                     <th className="text-left py-3 px-3 font-semibold text-gray-600">Date</th>
-                    <th className="w-12"></th>
+                    <th className="text-center py-3 px-3 font-semibold text-gray-600">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -91,11 +117,30 @@ export default function VoucherList() {
                       <td className="py-3 px-3 text-gray-500">{v.items.length} item(s)</td>
                       <td className="py-3 px-3 text-right font-semibold text-gray-700">₹{v.totalAmount.toLocaleString('en-IN')}</td>
                       <td className="py-3 px-3 text-gray-500">{v.createdBy?.name}</td>
-                      <td className="py-3 px-3 text-gray-400">{new Date(v.createdAt).toLocaleDateString()}</td>
+                      <td className="py-3 px-3 text-gray-400">{new Date(v.createdAt).toLocaleDateString('en-IN')}</td>
                       <td className="py-3 px-3">
-                        <button onClick={() => setSelected(v)} className="btn-secondary p-1.5">
-                          <Eye className="w-3.5 h-3.5" />
-                        </button>
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            onClick={() => setSelected(v)}
+                            className="btn-secondary p-1.5"
+                            title="View Details"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+                          {isAdmin && (
+                            <button
+                              onClick={() => handleDelete(v)}
+                              disabled={deleting === v._id}
+                              className="btn-danger p-1.5"
+                              title="Delete Voucher (reverses stock)"
+                            >
+                              {deleting === v._id
+                                ? <span className="w-3.5 h-3.5 block border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                : <Trash2 className="w-3.5 h-3.5" />
+                              }
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -119,11 +164,30 @@ export default function VoucherList() {
                     {selected.type === 'ADD' ? 'Purchase Voucher' : 'Sales Voucher'}
                   </span>
                 </div>
-                <button onClick={() => setSelected(null)} className="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+                <div className="flex items-center gap-2">
+                  {isAdmin && (
+                    <button
+                      onClick={() => handleDelete(selected)}
+                      disabled={deleting === selected._id}
+                      style={{ display:'flex', alignItems:'center', gap:5, padding:'7px 12px', borderRadius:9, background:'#fef2f2', border:'1.5px solid #fecaca', color:'#dc2626', fontWeight:600, fontSize:12.5, cursor:'pointer' }}
+                      title="Delete & reverse stock"
+                    >
+                      <Trash2 size={13} /> Delete Voucher
+                    </button>
+                  )}
+                  <button onClick={() => setSelected(null)} className="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+                </div>
               </div>
+
+              {isAdmin && (
+                <div style={{ background:'#fff7ed', border:'1px solid #fed7aa', borderRadius:8, padding:'7px 12px', marginBottom:14, fontSize:12, color:'#92400e' }}>
+                  ⚠️ Deleting this voucher will <strong>reverse</strong> all stock quantities.
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-3 text-sm mb-4">
                 <div><p className="text-gray-400">Party</p><p className="font-medium">{selected.party || '—'}</p></div>
-                <div><p className="text-gray-400">Date</p><p className="font-medium">{new Date(selected.createdAt).toLocaleDateString()}</p></div>
+                <div><p className="text-gray-400">Date</p><p className="font-medium">{new Date(selected.createdAt).toLocaleDateString('en-IN')}</p></div>
                 <div><p className="text-gray-400">Created By</p><p className="font-medium">{selected.createdBy?.name}</p></div>
                 {selected.note && <div><p className="text-gray-400">Note</p><p className="font-medium">{selected.note}</p></div>}
               </div>

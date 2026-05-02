@@ -68,6 +68,30 @@ router.get('/vouchers/:id', protect, async (req, res) => {
   }
 });
 
+router.delete('/vouchers/:id', protect, adminOnly, async (req, res) => {
+  try {
+    const voucher = await StockVoucher.findById(req.params.id).populate('items.item');
+    if (!voucher) return res.status(404).json({ message: 'Voucher not found' });
+
+    // Reverse stock quantities
+    for (const row of voucher.items) {
+      const stockItem = await StockItem.findById(row.item);
+      if (!stockItem) continue;
+      if (voucher.type === 'ADD') {
+        stockItem.quantity -= row.quantity; // undo purchase
+      } else {
+        stockItem.quantity += row.quantity; // undo sale
+      }
+      await stockItem.save();
+    }
+
+    await StockVoucher.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Voucher deleted and stock reversed' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 router.post('/vouchers', protect, async (req, res) => {
   try {
     const { type, items, party, note } = req.body;
