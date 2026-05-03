@@ -133,7 +133,7 @@ export default function Login() {
                 <Mail size={15} style={{ position:'absolute', left:13, top:'50%', transform:'translateY(-50%)', color:'#9ca3af' }} />
                 <input
                   type="text" required autoComplete="username"
-                  placeholder="admin or you@solarji.com"
+                  placeholder="Enter your email or username"
                   value={form.email}
                   onChange={e => setForm({ ...form, email:e.target.value })}
                   style={{
@@ -202,12 +202,6 @@ export default function Login() {
             marginTop:'1.75rem', padding:'1rem 1.25rem', borderRadius:12,
             background:'#fff8f0', border:`1px solid rgba(247,148,29,.25)`,
           }}>
-            <p style={{ fontSize:'.72rem', fontWeight:800, color:ORANGE, textTransform:'uppercase', letterSpacing:'.07em', marginBottom:4 }}>
-              Default Credentials
-            </p>
-            <p style={{ fontSize:'.82rem', color:'#6b7280' }}>
-              admin@solarji.com &nbsp;/&nbsp; admin123
-            </p>
           </div>
         </div>
       </div>
