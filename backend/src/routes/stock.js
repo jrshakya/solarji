@@ -94,7 +94,7 @@ router.delete('/vouchers/:id', protect, adminOnly, async (req, res) => {
 
 router.post('/vouchers', protect, async (req, res) => {
   try {
-    const { type, items, party, note } = req.body;
+    const { type, items, party, note, date } = req.body;
 
     let totalAmount = 0;
     const processedItems = [];
@@ -130,6 +130,7 @@ router.post('/vouchers', protect, async (req, res) => {
 
     const voucher = await StockVoucher.create({
       type, items: processedItems, totalAmount, party, note,
+      date: date ? new Date(date) : new Date(),
       createdBy: req.user._id,
     });
 

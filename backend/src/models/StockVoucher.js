@@ -11,6 +11,7 @@ const voucherItemSchema = new mongoose.Schema({
 const stockVoucherSchema = new mongoose.Schema({
   voucherNumber: { type: String, unique: true },
   type: { type: String, enum: ['ADD', 'SELL'], required: true },
+  date: { type: Date, default: Date.now },        // user-selectable transaction date
   items: [voucherItemSchema],
   totalAmount: { type: Number, required: true },
   party: { type: String, trim: true },

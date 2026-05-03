@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Target, Plus, TrendingUp, Clock, CheckCircle, ArrowRight, Activity } from 'lucide-react';
+import { Target, Plus, TrendingUp, Clock, CheckCircle, ArrowRight, Activity, Star } from 'lucide-react';
 import api from '../../api/axios';
 import Layout from '../../components/Layout';
 import { useAuth } from '../../context/AuthContext';
@@ -35,14 +35,25 @@ function StatCard({ label, value, icon:Icon, color, sub }) {
   );
 }
 
+function medalColor(i) {
+  return i === 0 ? '#f59e0b' : i === 1 ? '#94a3b8' : i === 2 ? '#d97706' : '#9ca3af';
+}
+
 export default function CRMDashboard() {
   const [leads, setLeads] = useState([]);
+  const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    api.get('/leads').then(r => setLeads(r.data)).catch(() => {}).finally(() => setLoading(false));
+    Promise.all([
+      api.get('/leads'),
+      api.get('/leads/leaderboard'),
+    ]).then(([lRes, lbRes]) => {
+      setLeads(lRes.data);
+      setLeaderboard(lbRes.data);
+    }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   const sc = STAGES.reduce((a,s) => ({...a,[s]:leads.filter(l=>l.stage===s).length}),{});
@@ -57,10 +68,10 @@ export default function CRMDashboard() {
 
   return (
     <Layout module="crm">
-      <div style={{ padding:'2rem 2rem 3rem', maxWidth:1400 }}>
+      <div style={{ padding:'clamp(1rem, 4vw, 2rem) clamp(1rem, 4vw, 2rem) clamp(2rem, 5vw, 3rem)', maxWidth:1400 }}>
 
         {/* Header */}
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'2rem' }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'2rem', flexWrap:'wrap', gap:'1rem' }}>
           <div>
             <h1 style={{ fontSize:'1.65rem', fontWeight:900, color:'#111111', letterSpacing:'-.03em', marginBottom:4 }}>CRM Dashboard</h1>
             <p style={{ color:'#9ca3af', fontSize:'.875rem' }}>Welcome back, <span style={{ color:ORANGE, fontWeight:700 }}>{user?.name}</span> 👋</p>
@@ -99,6 +110,51 @@ export default function CRMDashboard() {
             </div>
           </div>
         </div>
+
+        {/* Leaderboard */}
+        {leaderboard.length > 0 && (
+          <div className="card" style={{ marginBottom:'1.5rem' }}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'1.25rem' }}>
+              <h2 style={{ fontWeight:800, color:'#111111', fontSize:'1rem', display:'flex', alignItems:'center', gap:7 }}>
+                <Star size={15} style={{ color: ORANGE }}/> Team Leaderboard
+              </h2>
+              <span style={{ fontSize:'.75rem', color:'#9ca3af', fontWeight:500 }}>Points = 5 − days in stage</span>
+            </div>
+            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+              {leaderboard.map((u, i) => {
+                const isMe = u._id === user?._id;
+                return (
+                  <div key={u._id} style={{
+                    display:'flex', alignItems:'center', gap:12, padding:'10px 14px',
+                    borderRadius:12, background: isMe ? 'rgba(247,148,29,.07)' : '#fafafa',
+                    border:`1.5px solid ${isMe ? 'rgba(247,148,29,.3)' : '#f0f0f0'}`,
+                  }}>
+                    <span style={{ width:26, height:26, borderRadius:'50%', background: medalColor(i) + '22', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:900, fontSize:'.78rem', color: medalColor(i), flexShrink:0 }}>
+                      {i + 1}
+                    </span>
+                    <div style={{ width:30, height:30, borderRadius:8, background: ORANGE, display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, color:'#fff', fontSize:'.82rem', flexShrink:0 }}>
+                      {u.name?.charAt(0)?.toUpperCase()}
+                    </div>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <p style={{ fontWeight:700, color:'#111', fontSize:'.875rem', marginBottom:1 }}>{u.name} {isMe && <span style={{ fontSize:'.65rem', color:ORANGE }}>(you)</span>}</p>
+                      <p style={{ fontSize:'.72rem', color:'#9ca3af', textTransform:'capitalize' }}>{u.role}</p>
+                    </div>
+                    <div style={{ textAlign:'right', flexShrink:0 }}>
+                      <p style={{ fontWeight:900, fontSize:'1.3rem', color: u.points >= 0 ? '#10b981' : '#f43f5e', letterSpacing:'-.03em', lineHeight:1 }}>
+                        {u.points >= 0 ? `+${u.points}` : u.points}
+                      </p>
+                      <p style={{ fontSize:'.65rem', color:'#9ca3af', fontWeight:600 }}>points</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <p style={{ fontSize:'.72rem', color:'#9ca3af', marginTop:10, lineHeight:1.6 }}>
+              <strong>How it works:</strong> When you move a lead to the next stage, you earn <strong>5 − days_in_stage</strong> points.<br/>
+              Move same day → +5 pts · After 1 day → +4 · After 5 days → 0 · After 6+ days → negative
+            </p>
+          </div>
+        )}
 
         {/* Table */}
         <div className="card">

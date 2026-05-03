@@ -49,8 +49,8 @@ export default function VoucherList() {
 
   return (
     <Layout module="stock">
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
+      <div className="p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Voucher History</h1>
           <div className="flex gap-2">
             <button onClick={() => navigate('/stock/voucher/add')} className="btn-success gap-2">
@@ -63,7 +63,7 @@ export default function VoucherList() {
         </div>
 
         {/* Summary */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-2 gap-4 mb-6 max-[480px]:grid-cols-1">
           <div className="card border-l-4 border-green-500">
             <p className="text-sm text-gray-500">Total Purchases</p>
             <p className="text-2xl font-bold text-green-600">₹{totals.purchase.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</p>
@@ -117,7 +117,7 @@ export default function VoucherList() {
                       <td className="py-3 px-3 text-gray-500">{v.items.length} item(s)</td>
                       <td className="py-3 px-3 text-right font-semibold text-gray-700">₹{v.totalAmount.toLocaleString('en-IN')}</td>
                       <td className="py-3 px-3 text-gray-500">{v.createdBy?.name}</td>
-                      <td className="py-3 px-3 text-gray-400">{new Date(v.createdAt).toLocaleDateString('en-IN')}</td>
+                      <td className="py-3 px-3 text-gray-400">{new Date(v.date || v.createdAt).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' })}</td>
                       <td className="py-3 px-3">
                         <div className="flex items-center justify-center gap-1.5">
                           <button
@@ -156,7 +156,7 @@ export default function VoucherList() {
         {/* Detail Modal */}
         {selected && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl p-6">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl p-4 sm:p-6">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="font-bold text-gray-900 text-lg">{selected.voucherNumber}</h3>
@@ -187,7 +187,7 @@ export default function VoucherList() {
 
               <div className="grid grid-cols-2 gap-3 text-sm mb-4">
                 <div><p className="text-gray-400">Party</p><p className="font-medium">{selected.party || '—'}</p></div>
-                <div><p className="text-gray-400">Date</p><p className="font-medium">{new Date(selected.createdAt).toLocaleDateString('en-IN')}</p></div>
+                <div><p className="text-gray-400">Transaction Date</p><p className="font-medium">{new Date(selected.date || selected.createdAt).toLocaleDateString('en-IN', { day:'2-digit', month:'long', year:'numeric' })}</p></div>
                 <div><p className="text-gray-400">Created By</p><p className="font-medium">{selected.createdBy?.name}</p></div>
                 {selected.note && <div><p className="text-gray-400">Note</p><p className="font-medium">{selected.note}</p></div>}
               </div>

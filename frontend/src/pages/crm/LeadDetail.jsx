@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit2, MessageSquare, GitBranch, User, Phone, Mail, MapPin, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Edit2, MessageSquare, GitBranch, User, Phone, Mail, MapPin, RefreshCw, Star, Clock, Calendar } from 'lucide-react';
 import api from '../../api/axios';
 import Layout from '../../components/Layout';
 import toast from 'react-hot-toast';
@@ -21,6 +21,29 @@ const stageColors = {
   'Meter Install': 'bg-indigo-100 text-indigo-700 border-indigo-300',
   'Commission': 'bg-emerald-100 text-emerald-800 border-emerald-300',
 };
+
+const ORANGE = '#f7941d';
+
+function daysSince(dateStr) {
+  if (!dateStr) return 0;
+  return Math.floor((Date.now() - new Date(dateStr)) / 86400000);
+}
+
+function stageDuration(history, idx) {
+  const entry = history[idx];
+  const next  = history[idx + 1];
+  const start = new Date(entry.date);
+  const end   = next ? new Date(next.date) : new Date();
+  const days  = Math.floor((end - start) / 86400000);
+  return days;
+}
+
+function pointsColor(p) {
+  if (p >= 4)  return '#10b981';
+  if (p >= 2)  return ORANGE;
+  if (p >= 0)  return '#f59e0b';
+  return '#f43f5e';
+}
 
 export default function LeadDetail() {
   const { id } = useParams();
@@ -90,13 +113,13 @@ export default function LeadDetail() {
 
   if (!lead) return (
     <Layout module="crm">
-      <div className="p-6 text-center text-gray-500">Lead not found</div>
+      <div className="p-4 sm:p-6 text-center text-gray-500">Lead not found</div>
     </Layout>
   );
 
   return (
     <Layout module="crm">
-      <div className="p-6 max-w-5xl mx-auto">
+      <div className="p-4 sm:p-6 max-w-5xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
@@ -108,10 +131,20 @@ export default function LeadDetail() {
               <p className="text-gray-500 text-sm">{lead.phone}</p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className={`badge border ${stageColors[lead.stage] || 'bg-gray-100'} px-3 py-1.5 text-sm`}>
               {lead.stage}
             </span>
+            {(() => {
+              const last = lead.stageHistory?.[lead.stageHistory.length - 1];
+              const days = daysSince(last?.date || lead.createdAt);
+              const pts  = 5 - days;
+              return (
+                <span style={{ display:'flex', alignItems:'center', gap:4, padding:'4px 10px', borderRadius:99, background: pts >= 0 ? 'rgba(16,185,129,.1)' : 'rgba(244,63,94,.1)', border:`1px solid ${pts>=0?'rgba(16,185,129,.3)':'rgba(244,63,94,.3)'}`, fontSize:'.78rem', fontWeight:700, color: pointsColor(pts) }}>
+                  <Clock size={11}/> {days}d in stage · {pts >= 0 ? `+${pts}` : pts} pts if moved now
+                </span>
+              );
+            })()}
             <button onClick={() => setShowMoveModal(true)} className="btn-primary gap-2">
               <RefreshCw className="w-4 h-4" /> Move Stage
             </button>
@@ -188,14 +221,33 @@ export default function LeadDetail() {
                 <GitBranch className="w-4 h-4 text-solar-500" /> Stage History
               </h3>
               <div className="space-y-3">
-                {[...(lead.stageHistory || [])].reverse().map((h, i) => (
-                  <div key={i} className="relative pl-4 border-l-2 border-gray-200">
-                    <div className={`badge ${stageColors[h.stage] || 'bg-gray-100 text-gray-600'} mb-1`}>{h.stage}</div>
-                    {h.assignedTo && <p className="text-xs text-gray-600">→ {h.assignedTo.name}</p>}
-                    {h.note && <p className="text-xs text-gray-500 italic">"{h.note}"</p>}
-                    <p className="text-xs text-gray-400 mt-0.5">{new Date(h.date).toLocaleString()}</p>
-                  </div>
-                ))}
+                {(lead.stageHistory || []).map((h, i, arr) => {
+                  const dur = stageDuration(arr, i);
+                  const isCurrent = i === arr.length - 1;
+                  const pts = 5 - dur;
+                  return (
+                    <div key={i} className="relative pl-4 border-l-2" style={{ borderColor: isCurrent ? ORANGE : '#e5e7eb' }}>
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <div className={`badge ${stageColors[h.stage] || 'bg-gray-100 text-gray-600'}`}>{h.stage}</div>
+                        {isCurrent && <span style={{ fontSize:'.68rem', fontWeight:700, color:ORANGE, background:'rgba(247,148,29,.1)', padding:'1px 7px', borderRadius:99 }}>CURRENT</span>}
+                        {!isCurrent && (
+                          <span style={{ fontSize:'.68rem', fontWeight:700, color: pts > 0 ? '#10b981' : pts === 0 ? '#f59e0b' : '#f43f5e', background: pts > 0 ? 'rgba(16,185,129,.08)' : pts === 0 ? 'rgba(245,158,11,.08)' : 'rgba(244,63,94,.08)', padding:'1px 7px', borderRadius:99 }}>
+                            {pts > 0 ? `+${pts} pts` : pts === 0 ? '0 pts' : `${pts} pts`} · {dur}d
+                          </span>
+                        )}
+                      </div>
+                      {h.assignedTo && <p className="text-xs text-gray-600">→ {h.assignedTo.name}</p>}
+                      {h.movedBy?.name && <p className="text-xs text-gray-500">by {h.movedBy.name}</p>}
+                      {h.note && <p className="text-xs text-gray-500 italic">"{h.note}"</p>}
+                      <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
+                        <Calendar size={9}/>
+                        {new Date(h.date).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' })}
+                        {' · '}
+                        {new Date(h.date).toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' })}
+                      </p>
+                    </div>
+                  );
+                }).reverse()}
               </div>
             </div>
 
@@ -217,7 +269,7 @@ export default function LeadDetail() {
         {/* Move Stage Modal */}
         {showMoveModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-4 sm:p-6">
               <h3 className="font-bold text-gray-900 text-lg mb-4 flex items-center gap-2">
                 <RefreshCw className="w-5 h-5 text-solar-500" /> Move Lead Stage
               </h3>

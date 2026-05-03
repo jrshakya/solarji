@@ -74,7 +74,7 @@ export default function Users() {
 
   return (
     <Layout module="crm">
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Users Management</h1>
           <button onClick={openCreate} className="btn-primary">
@@ -145,7 +145,7 @@ export default function Users() {
         {/* Modal */}
         {showModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-4 sm:p-6">
               <div className="flex items-center justify-between mb-5">
                 <h3 className="font-bold text-gray-900 text-lg">{editing ? 'Edit User' : 'Create New User'}</h3>
                 <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">

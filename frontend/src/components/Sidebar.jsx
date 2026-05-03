@@ -2,7 +2,7 @@
 import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard, Users, Target, Package, ShoppingCart, FileText,
-  LogOut, Settings, PlusCircle, BarChart3, Home, Layers, ChevronRight
+  LogOut, Settings, PlusCircle, BarChart3, Home, Layers, ChevronRight, X,
 } from 'lucide-react';
 import logo from '../assets/solarji logo.jpeg';
 
@@ -30,9 +30,9 @@ function SectionLabel({ t }) {
   );
 }
 
-function SLink({ to, label, icon:Icon, end }) {
+function SLink({ to, label, icon:Icon, end, onNavigate }) {
   return (
-    <NavLink to={to} end={end} style={{ textDecoration:'none', display:'block' }}>
+    <NavLink to={to} end={end} style={{ textDecoration:'none', display:'block' }} onClick={() => onNavigate?.()}>
       {({ isActive }) => (
         <div style={{
           display:'flex', alignItems:'center', gap:10, padding:'9px 10px',
@@ -68,19 +68,31 @@ function NavBtn({ onClick, label, icon:Icon }) {
   );
 }
 
-export default function Sidebar({ module }) {
+export default function Sidebar({ module, onNavigate, onCloseMobile }) {
   const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
   const links = module === 'stock' ? STOCK_LINKS : CRM_LINKS;
 
   return (
     <aside style={{
-      width:240, minHeight:'100vh', display:'flex', flexDirection:'column',
-      background:BG, flexShrink:0, borderRight:`1px solid ${BORDER}`,
+      width:240, minHeight:'100vh', height:'100%', display:'flex', flexDirection:'column',
+      background:BG, flexShrink:0, borderRight:`1px solid ${BORDER}`, position:'relative',
+      paddingTop:'env(safe-area-inset-top, 0px)',
     }}>
 
+      {onCloseMobile && (
+        <button
+          type="button"
+          aria-label="Close menu"
+          className="lg:hidden absolute top-3 right-3 z-10 flex items-center justify-center p-2 rounded-xl bg-white/[0.08] text-white border border-white/[0.12]"
+          onClick={onCloseMobile}
+        >
+          <X size={20} />
+        </button>
+      )}
+
       {/* ── Brand ── */}
-      <div style={{ padding:'18px 14px 14px', borderBottom:`1px solid ${BORDER}` }}>
+      <div style={{ padding:'18px 14px 14px', borderBottom:`1px solid ${BORDER}`, paddingRight: onCloseMobile ? 52 : 14 }}>
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
           <img src={logo} alt="SolarJi" style={{
             width:40, height:40, borderRadius:10, objectFit:'cover',
@@ -99,22 +111,22 @@ export default function Sidebar({ module }) {
         {/* divider */}
         <div style={{ height:4 }} />
         <SectionLabel t={module === 'stock' ? 'Inventory' : 'CRM'} />
-        {links.map(l => <SLink key={l.to} {...l} />)}
+        {links.map(l => <SLink key={l.to} {...l} onNavigate={onNavigate} />)}
 
         {isAdmin && module === 'crm' && (
           <>
             <div style={{ height:12 }} />
             <SectionLabel t="Admin" />
-            {CRM_ADMIN.map(l => <SLink key={l.to} {...l} />)}
-            <SLink to="/admin" label="Admin Panel" icon={Settings} />
+            {CRM_ADMIN.map(l => <SLink key={l.to} {...l} onNavigate={onNavigate} />)}
+            <SLink to="/admin" label="Admin Panel" icon={Settings} onNavigate={onNavigate} />
           </>
         )}
 
         <div style={{ height:12 }} />
         <SectionLabel t="Navigate" />
-        <NavBtn onClick={() => navigate('/')}     label="Website" icon={Home}   />
-        {module !== 'crm'   && <NavBtn onClick={() => navigate('/crm')}   label="CRM"   icon={Target} />}
-        {module !== 'stock' && <NavBtn onClick={() => navigate('/stock')} label="Stock" icon={Layers} />}
+        <NavBtn onClick={() => { navigate('/'); onNavigate?.(); }}     label="Website" icon={Home}   />
+        {module !== 'crm'   && <NavBtn onClick={() => { navigate('/crm'); onNavigate?.(); }}   label="CRM"   icon={Target} />}
+        {module !== 'stock' && <NavBtn onClick={() => { navigate('/stock'); onNavigate?.(); }} label="Stock" icon={Layers} />}
       </nav>
 
       {/* ── User ── */}
@@ -130,10 +142,21 @@ export default function Sidebar({ module }) {
           </div>
           <div style={{ flex:1, minWidth:0 }}>
             <p style={{ fontWeight:700, fontSize:'.85rem', color:'#fff', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user?.name}</p>
-            <p style={{ fontSize:'.7rem', color:'rgba(255,255,255,.35)', textTransform:'capitalize' }}>{user?.role}</p>
+            <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+              <p style={{ fontSize:'.7rem', color:'rgba(255,255,255,.35)', textTransform:'capitalize' }}>{user?.role}</p>
+              {typeof user?.points === 'number' && (
+                <span style={{
+                  fontSize:'.65rem', fontWeight:800, padding:'1px 6px', borderRadius:99,
+                  background: user.points >= 0 ? 'rgba(16,185,129,.2)' : 'rgba(244,63,94,.2)',
+                  color: user.points >= 0 ? '#6ee7b7' : '#fca5a5',
+                }}>
+                  {user.points >= 0 ? `★ ${user.points}` : `★ ${user.points}`} pts
+                </span>
+              )}
+            </div>
           </div>
         </div>
-        <button onClick={logout} style={{
+        <button onClick={() => { logout(); onNavigate?.(); }} style={{
           display:'flex', alignItems:'center', gap:10, padding:'9px 10px', width:'100%',
           borderRadius:11, border:'1px solid transparent', background:'transparent',
           color:'rgba(255,255,255,.35)', fontSize:'.85rem', fontWeight:500, cursor:'pointer', transition:'all .13s',

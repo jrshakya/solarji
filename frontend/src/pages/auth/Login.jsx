@@ -27,7 +27,12 @@ export default function Login() {
   };
 
   return (
-    <div style={{ minHeight:'100vh', display:'flex', fontFamily:"'Plus Jakarta Sans',sans-serif" }}>
+    <div style={{
+      minHeight:'100dvh',
+      display:'flex',
+      fontFamily:"'Plus Jakarta Sans',sans-serif",
+      paddingBottom:'env(safe-area-inset-bottom)',
+    }}>
 
       {/* ── Left: White branding panel ── */}
       <div className="hidden lg:flex flex-col justify-between p-14"
@@ -98,7 +103,9 @@ export default function Login() {
       {/* ── Right: login form (white) ── */}
       <div style={{
         flex:1, display:'flex', alignItems:'center', justifyContent:'center',
-        padding:'2rem', background:'#fff',
+        padding:'clamp(1rem, 5vw, 2rem)',
+        paddingBottom:'max(2rem, env(safe-area-inset-bottom))',
+        background:'#fff',
       }}>
         <div style={{ width:'100%', maxWidth:400 }}>
 

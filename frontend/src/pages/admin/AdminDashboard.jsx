@@ -60,7 +60,7 @@ export default function AdminDashboard() {
 
   return (
     <Layout module="crm">
-      <div style={{ padding:'2rem 2rem 3rem', maxWidth:1200 }}>
+      <div style={{ padding:'clamp(1rem, 4vw, 2rem) clamp(1rem, 4vw, 2rem) clamp(2rem, 5vw, 3rem)', maxWidth:1200 }}>
 
         {/* Header */}
         <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:'2rem' }}>

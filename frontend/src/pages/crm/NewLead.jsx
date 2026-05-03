@@ -41,7 +41,7 @@ export default function NewLead() {
 
   return (
     <Layout module="crm">
-      <div className="p-6 max-w-2xl mx-auto">
+      <div className="p-4 sm:p-6 max-w-2xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
           <button onClick={() => navigate('/crm/leads')} className="btn-secondary p-2">
             <ArrowLeft className="w-4 h-4" />

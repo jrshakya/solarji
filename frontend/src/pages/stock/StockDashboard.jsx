@@ -48,10 +48,10 @@ export default function StockDashboard() {
 
   return (
     <Layout module="stock">
-      <div style={{ padding:'2rem 2rem 3rem', maxWidth:1400 }}>
+      <div style={{ padding:'clamp(1rem, 4vw, 2rem) clamp(1rem, 4vw, 2rem) clamp(2rem, 5vw, 3rem)', maxWidth:1400 }}>
 
         {/* Header */}
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'2rem' }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'2rem', flexWrap:'wrap', gap:'1rem' }}>
           <div>
             <h1 style={{ fontSize:'1.65rem', fontWeight:900, color:'#111111', letterSpacing:'-.03em', marginBottom:4 }}>Stock Dashboard</h1>
             <p style={{ color:'#9ca3af', fontSize:'.875rem' }}>Inventory &amp; voucher management</p>

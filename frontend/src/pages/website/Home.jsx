@@ -1,6 +1,7 @@
-﻿import { useNavigate } from 'react-router-dom';
+﻿import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Sun, Zap, Shield, Award, Phone, Mail, MapPin,
-         ArrowRight, BarChart3, Package, CheckCircle, Star, Layers } from 'lucide-react';
+         ArrowRight, BarChart3, Package, CheckCircle, Star, Layers, Menu, X } from 'lucide-react';
 import logo from '../../assets/solarji logo.jpeg';
 
 const ORANGE = '#f7941d';
@@ -56,38 +57,78 @@ const WHY = [
 
 export default function Home() {
   const navigate = useNavigate();
+  const [mobileNav, setMobileNav] = useState(false);
+
+  const scrollLock = () => setMobileNav(false);
 
   return (
     <div style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", color:BLACK, background:WHITE }}>
 
       {/* ══ NAVBAR ══ */}
       <header style={{ position:'sticky', top:0, zIndex:50, background:'rgba(255,255,255,.92)', backdropFilter:'blur(16px)', borderBottom:'1px solid rgba(0,0,0,.07)' }}>
-        <nav style={{ maxWidth:1200, margin:'0 auto', padding:'0 1.5rem', display:'flex', alignItems:'center', justifyContent:'space-between', height:64 }}>
-          <a href="/" style={{ display:'flex', alignItems:'center', gap:10, textDecoration:'none' }}>
-            <img src={logo} alt="SolarJi" style={{ width:38, height:38, borderRadius:10, objectFit:'cover', border:`2px solid ${ORANGE}` }}/>
-            <span style={{ fontWeight:900, fontSize:'1.05rem', color:BLACK, letterSpacing:'-.02em' }}>SolarJi</span>
-          </a>
-          <div className="hidden md:flex" style={{ display:'flex', alignItems:'center', gap:'2rem' }}>
-            {['Services','Products','Gallery','Why Us','Contact'].map(l=>(
-              <a key={l} href={`#${l.toLowerCase().replace(' ','-')}`}
-                style={{ fontSize:'.875rem', fontWeight:600, color:'#6b7280', textDecoration:'none', transition:'color .15s' }}
-                onMouseEnter={e=>e.target.style.color=ORANGE}
-                onMouseLeave={e=>e.target.style.color='#6b7280'}
-              >{l}</a>
-            ))}
-          </div>
-          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-            <button onClick={()=>navigate('/crm')} className="btn-secondary" style={{ fontSize:'.8rem', padding:'7px 14px', display:'flex', gap:6 }}><BarChart3 size={13}/> CRM</button>
-            <button onClick={()=>navigate('/stock')} className="btn-secondary" style={{ fontSize:'.8rem', padding:'7px 14px', display:'flex', gap:6 }}><Package size={13}/> Stock</button>
-            <button onClick={()=>navigate('/quotation')} className="btn-primary" style={{ padding:'9px 18px', fontSize:'.85rem' }}>
-              Get Quote <ArrowRight size={14}/>
+        <nav style={{ maxWidth:1200, margin:'0 auto', padding:'0 clamp(0.75rem, 4vw, 1.5rem)' }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:10, minHeight:64 }}>
+            <a href="/" style={{ display:'flex', alignItems:'center', gap:10, textDecoration:'none', flexShrink:0 }} onClick={scrollLock}>
+              <img src={logo} alt="SolarJi" style={{ width:36, height:36, borderRadius:10, objectFit:'cover', border:`2px solid ${ORANGE}` }}/>
+              <span style={{ fontWeight:900, fontSize:'clamp(0.95rem, 4vw, 1.05rem)', color:BLACK, letterSpacing:'-.02em' }}>SolarJi</span>
+            </a>
+
+            {/* Desktop links */}
+            <div className="hidden md:flex" style={{ alignItems:'center', gap:'2rem' }}>
+              {['Services','Products','Gallery','Why Us','Contact'].map(l=>(
+                <a key={l} href={`#${l.toLowerCase().replace(' ','-')}`}
+                  style={{ fontSize:'.875rem', fontWeight:600, color:'#6b7280', textDecoration:'none', transition:'color .15s' }}
+                  onMouseEnter={e=>e.target.style.color=ORANGE}
+                  onMouseLeave={e=>e.target.style.color='#6b7280'}
+                >{l}</a>
+              ))}
+            </div>
+
+            {/* Desktop CTAs */}
+            <div className="hidden md:flex" style={{ alignItems:'center', gap:8, flexShrink:0 }}>
+              <button onClick={()=>navigate('/crm')} className="btn-secondary" style={{ fontSize:'.8rem', padding:'7px 14px', display:'flex', gap:6 }}><BarChart3 size={13}/> CRM</button>
+              <button onClick={()=>navigate('/stock')} className="btn-secondary" style={{ fontSize:'.8rem', padding:'7px 14px', display:'flex', gap:6 }}><Package size={13}/> Stock</button>
+              <button onClick={()=>navigate('/quotation')} className="btn-primary" style={{ padding:'9px 18px', fontSize:'.85rem' }}>
+                Get Quote <ArrowRight size={14}/>
+              </button>
+            </div>
+
+            <button
+              type="button"
+              className="md:hidden flex items-center justify-center p-2.5 rounded-xl border border-gray-200 bg-white text-gray-800 shadow-sm"
+              aria-expanded={mobileNav}
+              aria-label={mobileNav ? 'Close menu' : 'Open menu'}
+              onClick={() => setMobileNav(v => !v)}
+            >
+              {mobileNav ? <X size={22} /> : <Menu size={22} />}
             </button>
           </div>
+
+          {/* Mobile menu panel */}
+          {mobileNav && (
+            <div className="md:hidden border-t border-gray-100 py-4 flex flex-col gap-3 animate-[fadeUp_.2s_ease_both]">
+              <div className="flex flex-col gap-1">
+                {['Services','Products','Gallery','Why Us','Contact'].map(l=>(
+                  <a
+                    key={l}
+                    href={`#${l.toLowerCase().replace(' ','-')}`}
+                    className="py-2.5 px-2 rounded-xl font-semibold text-gray-700 active:bg-orange-50"
+                    onClick={scrollLock}
+                  >{l}</a>
+                ))}
+              </div>
+              <div className="flex flex-col gap-2 pt-2 border-t border-gray-100">
+                <button onClick={()=>{ navigate('/crm'); scrollLock(); }} className="btn-secondary justify-center w-full"><BarChart3 size={14}/> CRM</button>
+                <button onClick={()=>{ navigate('/stock'); scrollLock(); }} className="btn-secondary justify-center w-full"><Package size={14}/> Stock</button>
+                <button onClick={()=>{ navigate('/quotation'); scrollLock(); }} className="btn-primary justify-center w-full">Get Quote <ArrowRight size={14}/></button>
+              </div>
+            </div>
+          )}
         </nav>
       </header>
 
       {/* ══ HERO — full photo background ══ */}
-      <section style={{ position:'relative', minHeight:'95vh', display:'flex', alignItems:'center', overflow:'hidden' }}>
+      <section style={{ position:'relative', minHeight:'clamp(78vh, 85vh, 95vh)', display:'flex', alignItems:'center', overflow:'hidden' }}>
         {/* background photo */}
         <img src={PHOTOS.hero} alt="Solar farm"
           style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', objectPosition:'center' }}
@@ -97,7 +138,7 @@ export default function Home() {
         {/* orange glow top-right */}
         <div style={{ position:'absolute', top:'-5%', right:'-5%', width:500, height:500, borderRadius:'50%', background:'radial-gradient(circle, rgba(247,148,29,.22) 0%, transparent 65%)', pointerEvents:'none' }} className="anim-glow"/>
 
-        <div style={{ maxWidth:1200, margin:'0 auto', padding:'6rem 1.5rem', width:'100%', position:'relative' }}>
+        <div style={{ maxWidth:1200, margin:'0 auto', padding:'clamp(3rem, 10vw, 6rem) clamp(1rem, 4vw, 1.5rem)', width:'100%', position:'relative' }}>
           <div className="anim-fade-up" style={{ maxWidth:680 }}>
             <div style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'6px 16px', borderRadius:99, background:'rgba(247,148,29,.15)', border:'1px solid rgba(247,148,29,.35)', color:ORANGE, fontSize:'.78rem', fontWeight:700, marginBottom:'1.75rem' }}>
               <span style={{ width:7, height:7, borderRadius:'50%', background:ORANGE, display:'inline-block' }} className="anim-glow"/>
@@ -189,7 +230,7 @@ export default function Home() {
             <p style={{ color:'#9ca3af' }}>Real solar projects delivered across Kanpur and Uttar Pradesh.</p>
           </div>
           {/* 2×2 grid top + wide bottom */}
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gridTemplateRows:'220px 320px', gap:'1rem' }}>
+          <div className="home-gallery-grid">
             {GALLERY.map(({photo,label},i)=>(
               <div key={i} style={{ position:'relative', overflow:'hidden', borderRadius:16, gridColumn: i===3?'3/5':undefined, gridRow: i===3?'1/3':undefined }}>
                 <img src={photo} alt={label} style={{ width:'100%', height:'100%', objectFit:'cover', transition:'transform .5s' }}
@@ -225,7 +266,7 @@ export default function Home() {
             <h2 style={{ fontSize:'clamp(1.8rem,3.5vw,2.75rem)', fontWeight:900, color:BLACK, letterSpacing:'-.03em', marginBottom:'.75rem' }}>Premium Products</h2>
             <p style={{ color:'#9ca3af' }}>Tier-1 solar equipment from globally trusted manufacturers.</p>
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))', gap:'1rem' }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,240px),1fr))', gap:'1rem' }}>
             {PRODUCTS.map(({name,brands,desc})=>(
               <div key={name} style={{ display:'flex', gap:14, padding:'1.25rem 1.5rem', borderRadius:16, border:'1.5px solid #e5e7eb', background:WHITE, transition:'all .15s' }}
                 onMouseEnter={e=>{e.currentTarget.style.borderColor=ORANGE;e.currentTarget.style.background='#fff8f0';}}
@@ -247,14 +288,14 @@ export default function Home() {
 
       {/* ══ WHY US — photo + text ══ */}
       <section id="why-us" style={{ background:WHITE, padding:'6rem 0' }}>
-        <div style={{ maxWidth:1200, margin:'0 auto', padding:'0 1.5rem', display:'grid', gridTemplateColumns:'1fr 1fr', gap:'5rem', alignItems:'center' }}>
+        <div style={{ maxWidth:1200, margin:'0 auto', padding:'0 clamp(1rem, 4vw, 1.5rem)', paddingBottom:'clamp(2rem, 8vw, 4rem)' }} className="home-why-grid">
           {/* Left: stacked photos */}
           <div style={{ position:'relative' }}>
             <img src={PHOTOS.farm} alt="Solar farm"
               style={{ width:'100%', height:380, objectFit:'cover', borderRadius:24, boxShadow:'0 24px 60px rgba(0,0,0,.15)' }}
             />
             {/* floating small photo */}
-            <div style={{ position:'absolute', bottom:-28, right:-24, width:180, height:140, borderRadius:18, overflow:'hidden', border:`4px solid ${WHITE}`, boxShadow:'0 16px 40px rgba(0,0,0,.2)' }}>
+            <div className="home-float-photo" style={{ width:180, height:140, borderRadius:18, overflow:'hidden', border:`4px solid ${WHITE}`, boxShadow:'0 16px 40px rgba(0,0,0,.2)' }}>
               <img src={PHOTOS.engineer} alt="Engineer" style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
             </div>
             {/* stat pill */}

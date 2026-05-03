@@ -13,6 +13,7 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     line-height: 1.6;
+    overflow-x: hidden;
   }
   ::-webkit-scrollbar       { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -130,4 +131,52 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* ── Home page responsive ─────────────────────────── */
+.home-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: 220px 320px;
+  gap: 1rem;
+}
+@media (max-width: 767px) {
+  .home-gallery-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+  }
+  .home-gallery-grid > * {
+    grid-column: auto !important;
+    grid-row: auto !important;
+    min-height: 200px;
+  }
+}
+
+.home-why-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5rem;
+  align-items: center;
+}
+@media (max-width: 1023px) {
+  .home-why-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+
+.home-float-photo {
+  position: absolute;
+  bottom: -28px;
+  right: -24px;
+}
+@media (max-width: 1023px) {
+  .home-float-photo {
+    position: relative;
+    bottom: auto;
+    right: auto;
+    width: min(100%, 240px);
+    margin: 1rem auto 0;
+    border-width: 3px !important;
+  }
 }

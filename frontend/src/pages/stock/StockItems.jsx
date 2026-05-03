@@ -143,8 +143,8 @@ export default function StockItems() {
         </table>
       </div>
 
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
+      <div className="p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Stock Items</h1>
           <div className="flex gap-2">
             <button
@@ -237,7 +237,7 @@ export default function StockItems() {
         {/* Modal */}
         {showModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-5">
                 <h3 className="font-bold text-gray-900 text-lg">{editing ? 'Edit Item' : 'Add Stock Item'}</h3>
                 <button onClick={() => setShowModal(false)}><X className="w-5 h-5 text-gray-400" /></button>

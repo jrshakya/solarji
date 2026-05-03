@@ -1,15 +1,18 @@
 ﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, Save, ShoppingCart, Package } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Save, ShoppingCart, Package, Calendar } from 'lucide-react';
 import api from '../../api/axios';
 import Layout from '../../components/Layout';
 import toast from 'react-hot-toast';
+
+const todayISO = () => new Date().toISOString().split('T')[0];
 
 export default function VoucherForm({ type }) {
   const navigate = useNavigate();
   const [stockItems, setStockItems] = useState([]);
   const [party, setParty] = useState('');
   const [note, setNote] = useState('');
+  const [date, setDate] = useState(todayISO());
   const [saving, setSaving] = useState(false);
   const [rows, setRows] = useState([{ item: '', itemName: '', quantity: 1, price: '', total: 0 }]);
 
@@ -54,7 +57,7 @@ export default function VoucherForm({ type }) {
     if (validRows.length === 0) return toast.error('Add at least one item');
     setSaving(true);
     try {
-      const payload = { type, items: validRows.map(r => ({ item: r.item, quantity: Number(r.quantity), price: Number(r.price) })), party, note };
+      const payload = { type, items: validRows.map(r => ({ item: r.item, quantity: Number(r.quantity), price: Number(r.price) })), party, note, date };
       const res = await api.post('/stock/vouchers', payload);
       toast.success(`${title} ${res.data.voucherNumber} created!`);
       navigate('/stock/vouchers');
@@ -67,7 +70,7 @@ export default function VoucherForm({ type }) {
 
   return (
     <Layout module="stock">
-      <div className="p-6 max-w-4xl mx-auto">
+      <div className="p-4 sm:p-6 max-w-4xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
           <button onClick={() => navigate('/stock')} className="btn-secondary p-2"><ArrowLeft className="w-4 h-4" /></button>
           <div className="flex items-center gap-2">
@@ -86,10 +89,21 @@ export default function VoucherForm({ type }) {
           {/* Party Info */}
           <div className="card">
             <h3 className="font-semibold text-gray-700 mb-4">{isSell ? 'Customer' : 'Supplier'} Details</h3>
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid md:grid-cols-3 gap-4">
               <div>
                 <label className="label">{isSell ? 'Customer Name' : 'Supplier Name'}</label>
                 <input className="input" value={party} onChange={e => setParty(e.target.value)} placeholder={isSell ? 'Customer name' : 'Supplier / Party name'} />
+              </div>
+              <div>
+                <label className="label flex items-center gap-1"><Calendar size={11} /> Transaction Date</label>
+                <input
+                  type="date"
+                  className="input"
+                  value={date}
+                  max={todayISO()}
+                  onChange={e => setDate(e.target.value)}
+                  required
+                />
               </div>
               <div>
                 <label className="label">Note / Remarks</label>
